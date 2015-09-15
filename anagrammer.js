@@ -89,7 +89,7 @@ function allwords(dict, input){
 }
 
 function anagram(dict, input){
-	// Given a dictionary of sorted-letter-word keys and a word,
+	// Given a dictionary of sorted-letter-word keys and a phrase,
 	// find some anagrams
 	if (input.length <= 0){
 		return null;
@@ -99,46 +99,109 @@ function anagram(dict, input){
 	var idx = -1;
 	var kcha = '';
 	var searchedkeys = [];
+	var keycombinations = []; // array of word keys that are valid combinations
 
-	var i = 0;
-	for (var key in dict){
-		if (key.length <= input.length){
-			// make a shallow copy of the input string
-			var icopy = input.slice();
-			// are all letters of key in input?
-			// make an array to hold all of the letters
-			kcopy = [];
-			for(var k = 0; k < key.length; k++){
-				kcha = key[k];
-				idx = icopy.indexOf(kcha);
-				if (idx !== -1){
-					kcopy.push(kcha);
-					if (!icopy || !icopy.splice){
-						debugger;
+	// loop over words
+	// find a word
+	//   are there any letters left?
+	//     yes
+	//       take those letters out
+	//       
+	//       loop over words...
+	//     no
+	//       add this combination of words to? return null
+	//  find no words
+	//    return null
+	function key_is_in(key, str){
+		// return true if all of the letters in key are also in str
+		if (key.length > str.length){
+			return false;
+		}
+		for (var i=0; i < key.length; i++){
+			if (str.indexOf(key[i]) === -1){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	function remove_key(key, str){
+		var strcpy = str.slice();
+		for (var i=0; i < key.length; i++){
+			var idx = strcpy.indexOf(key[i]);
+			if (idx !== -1){
+				strcpy.splice(idx, 1);
+			}
+		}
+		return strcpy;
+	}
+	// let's try horribly nested iterative to sort out the algorithm logic...
+	// possible key combinations
+	// valid key combinations
+	var validkeycombinations = [];
+	for (var key_i in dict){
+		var possiblekeycombination = [];
+		if (key_is_in(key_i, input)){
+			var newinput_i = remove_key(key_i, input);
+			if (newinput_i.length <= 0){
+				validkeycombinations.push([key_i]);
+			} else {
+				possiblekeycombination.push(key_i);
+				// look for another key in the input
+				for (var key_j in dict){
+					if (key_is_in(key_j, newinput_i)){
+						var newinput_j = remove_key(key_j, newinput_i);
+						if (newinput_j.length <= 0){
+							possiblekeycombination.push(key_j);
+							validkeycombinations.push(possiblekeycombination);
+						} else {
+
+						}
 					}
-					icopy.splice(idx,1);
 				}
 			}
-			// TODO: build phrases
-			// Favor longest word keys?
-
-			// if all letters of key are in icopy, 
-			if (kcopy.length === key.length){
-				// for this key, see if we can anagram with the letters remaining
-				searchedkeys.push(key);
-				if(icopy.length > 0){
-					console.log('Word: ' + dict[key] + ' with remaining: ' + icopy);
-					var searchedkeyplus = anagram(dict, icopy);
-				} else {
-					// icopy is down to 0 characters
-					// searchedkeys is a valid combination of keys we can iterate through for anagram phrases
-					// what do we do with it?
-					return searchedkeys;
-				}
-			}
-			// if not, move to the next key
 		}
 	}
+
+	var i = 0;
+	// for (var key in dict){
+	//	if (key.length <= input.length){
+	// 		// make a shallow copy of the input string
+	// 		var icopy = input.slice();
+	// 		// are all letters of key in input?
+	// 		// make an array to hold all of the letters
+	// 		kcopy = [];
+	// 		for(var k = 0; k < key.length; k++){
+	// 			kcha = key[k];
+	// 			idx = icopy.indexOf(kcha);
+	// 			if (idx !== -1){
+	// 				kcopy.push(kcha);
+	// 				if (!icopy || !icopy.splice){
+	// 					debugger;
+	// 				}
+	// 				icopy.splice(idx,1);
+	// 			}
+	// 		}
+	// 		// TODO: build phrases
+	// 		// Favor longest word keys?
+
+	// 		// if all letters of key are in icopy, 
+	// 		if (kcopy.length === key.length){
+	// 			// for this key, see if we can anagram with the letters remaining
+	// 			searchedkeys.push(key);
+	// 			if(icopy.length > 0){
+	// 				console.log('Word: ' + dict[key] + ' with remaining: ' + icopy);
+	// 				var searchedkeyplus = anagram(dict, icopy);
+	// 			} else {
+	// 				// icopy is down to 0 characters
+	// 				// searchedkeys is a valid combination of keys we can iterate through for anagram phrases
+	// 				// what do we do with it?
+	// 				return searchedkeys;
+	// 			}
+	// 		}
+	// 		// if not, move to the next key
+	// 	}
+	// }
 	// return words;
 }
 
