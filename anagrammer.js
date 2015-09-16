@@ -88,6 +88,31 @@ function allwords(dict, input){
 	return dict[key(input)];
 }
 
+function key_is_in(key, str){
+	// return true if all of the letters in key are also in str
+	if (key.length > str.length){
+		return false;
+	}
+	for (var i=0; i < key.length; i++){
+		if (str.indexOf(key[i]) === -1){
+			return false;
+		}
+	}
+	return true;
+}
+
+function remove_key(key, str){
+	// remove each letter in key from str
+	var strcpy = str.slice();
+	for (var i=0; i < key.length; i++){
+		var idx = strcpy.indexOf(key[i]);
+		if (idx !== -1){
+			strcpy.splice(idx, 1);
+		}
+	}
+	return strcpy;
+}
+
 function anagram(dict, input){
 	// Given a dictionary of sorted-letter-word keys and a phrase,
 	// find some anagrams
@@ -95,114 +120,44 @@ function anagram(dict, input){
 		return null;
 	}
 
-	var kcopy = [];
-	var idx = -1;
-	var kcha = '';
-	var searchedkeys = [];
-	var keycombinations = []; // array of word keys that are valid combinations
-
-	// loop over words
-	// find a word
-	//   are there any letters left?
-	//     yes
-	//       take those letters out
-	//       
-	//       loop over words...
-	//     no
-	//       add this combination of words to? return null
-	//  find no words
-	//    return null
-	function key_is_in(key, str){
-		// return true if all of the letters in key are also in str
-		if (key.length > str.length){
-			return false;
-		}
-		for (var i=0; i < key.length; i++){
-			if (str.indexOf(key[i]) === -1){
-				return false;
-			}
-		}
-		return true;
-	}
-
-	function remove_key(key, str){
-		var strcpy = str.slice();
-		for (var i=0; i < key.length; i++){
-			var idx = strcpy.indexOf(key[i]);
-			if (idx !== -1){
-				strcpy.splice(idx, 1);
-			}
-		}
-		return strcpy;
-	}
-	// let's try horribly nested iterative to sort out the algorithm logic...
-	// possible key combinations
-	// valid key combinations
 	var validkeycombinations = [];
-	for (var key_i in dict){
-		var possiblekeycombination = [];
-		if (key_is_in(key_i, input)){
-			var newinput_i = remove_key(key_i, input);
-			if (newinput_i.length <= 0){
-				validkeycombinations.push([key_i]);
-			} else {
-				possiblekeycombination.push(key_i);
-				// look for another key in the input
-				for (var key_j in dict){
-					if (key_is_in(key_j, newinput_i)){
-						var newinput_j = remove_key(key_j, newinput_i);
-						if (newinput_j.length <= 0){
-							possiblekeycombination.push(key_j);
-							validkeycombinations.push(possiblekeycombination);
-						} else {
+	var possiblekeycombination = [];
+	recursecombinations(dict, input, validkeycombinations, possiblekeycombination);
+	// TODO: remove duplicates in valid key combinations, iterate all phrases
+	return validkeycombinations;
+}
 
-						}
-					}
+function recursecombinations(dict, input, validkeycombinations, possiblekeycombination){
+	// Check all word keys in the dictionary to see if they 'fit' in input.
+	// If this word key 'fits' and uses all the letters, then this word key stack is a valid
+	// combination of word keys.
+	// If the word key 'fits' and does not use all the letters, then add the key to 
+	// the word key 'stack' and check the rest of the letters.
+	// If the word key 'fits' but the rest of the letters are not usable as a word, 
+	// then pop this word off the stack and keep going.
+	for (var key_i in dict){
+		if (dict.hasOwnProperty(key_i)){
+			if (key_is_in(key_i, input)){
+				var newinput_i = remove_key(key_i, input);
+				// if all letters in input have been 'used'
+				if (newinput_i.length <= 0){
+					// add a copy of this key combination to valid combinations array
+					possiblekeycombination.push(key_i);
+					validkeycombinations.push(possiblekeycombination.slice());
+					// clear out this 'stack' of possible combinations
+					possiblekeycombination.slice(0, possiblekeycombination.length);
+				} else {
+					// add this word key to the possible combination 'stack'
+					possiblekeycombination.push(key_i);
+					// check the rest of the letters in the word key
+					recursecombinations(dict, newinput_i, validkeycombinations, possiblekeycombination);
 				}
+				// this word key has been checked
+				possiblekeycombination.pop();
 			}
 		}
 	}
-
-	var i = 0;
-	// for (var key in dict){
-	//	if (key.length <= input.length){
-	// 		// make a shallow copy of the input string
-	// 		var icopy = input.slice();
-	// 		// are all letters of key in input?
-	// 		// make an array to hold all of the letters
-	// 		kcopy = [];
-	// 		for(var k = 0; k < key.length; k++){
-	// 			kcha = key[k];
-	// 			idx = icopy.indexOf(kcha);
-	// 			if (idx !== -1){
-	// 				kcopy.push(kcha);
-	// 				if (!icopy || !icopy.splice){
-	// 					debugger;
-	// 				}
-	// 				icopy.splice(idx,1);
-	// 			}
-	// 		}
-	// 		// TODO: build phrases
-	// 		// Favor longest word keys?
-
-	// 		// if all letters of key are in icopy, 
-	// 		if (kcopy.length === key.length){
-	// 			// for this key, see if we can anagram with the letters remaining
-	// 			searchedkeys.push(key);
-	// 			if(icopy.length > 0){
-	// 				console.log('Word: ' + dict[key] + ' with remaining: ' + icopy);
-	// 				var searchedkeyplus = anagram(dict, icopy);
-	// 			} else {
-	// 				// icopy is down to 0 characters
-	// 				// searchedkeys is a valid combination of keys we can iterate through for anagram phrases
-	// 				// what do we do with it?
-	// 				return searchedkeys;
-	// 			}
-	// 		}
-	// 		// if not, move to the next key
-	// 	}
-	// }
-	// return words;
+	return;
 }
 
 var commands = [
